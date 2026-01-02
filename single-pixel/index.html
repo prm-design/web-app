@@ -1,1 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1024" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>PRM · Single Pixel (True)</title>
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg1:#0b1024; --bg2:#070a14;
+      --stroke: rgba(255,255,255,.14);
+      --text: rgba(231,236,255,.92);
+      --btn: rgba(255,255,255,.08);
+      --btn2: rgba(255,255,255,.12);
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    html, body{ height:100%; margin:0; }
+    body{
+      background: radial-gradient(1200px 700px at 50% 20%, var(--bg1), var(--bg2));
+      overflow:hidden;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
 
+    /* We draw a 1x1 pixel in an internal buffer, then scale it up pixel-perfect */
+    canvas{
+      position:fixed; inset:0;
+      width:100vw; height:100vh;
+      display:block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      touch-action:none;
+    }
+
+    .brand{
+      position:fixed;
+      left: calc(10px + env(safe-area-inset-left));
+      top:  calc(10px + env(safe-area-inset-top));
+      width:44px; height:44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAQRklEQVR4nO2deXBlVZ3HP+fc+5a85CXpDuk9odl3BgRKQcdmhh5L1HZkZlgGBMoSRZFS0EJsyxmcjXEpFUZlFhAGamAASx0GFMsVdCzxjwFHpgHpsZOX153u7NtLXt6795zf/HFulpe8rCS8KrjfqptXuff+zvL9nuV3fue8RLFKHNxwiqzW9rWIHUMvqtXYrcgoz5aY9GWgjSPL5nVZL+bVjpj4VaBNDi7J75Iv5Nkek/8K0MahRTnWiz2MyX/lWIrDBQWIyV87LMZlVQFi8tceC3E6T4CY/PVDNW71Ui/EWFvM5Vgv9CDG+mG2W7+oFxRj/aEhbv21QBebBOIeUHPEAtQYKh5+agClECnjb90e94BaIxagxogFqDFiAWqMWIAaIxagxogFqDFiAWqMWIAaIxagxogFqDFiAWqMWIAaIxagxogFqDH8FVso5S5rF36mFIjMXKuBArQGYX5eeiqPKs+qlUlr9161skyXGZfecsu8Wrs5WL4AWqOURkwJkRBFqrIw2gNTRqQEWECjSIKXdAVbiqhZaSnPQ0KDmEKUTh0g02SKmQTKgIdSdc5ubuVnl9cUozR8l070HKXABLPK7Ll6eT4YsyAP8+10ZJcEa1YkxOICTLcewdpxhEn8DTvwt7USvphzpGofbBlrhtCZVpInnYpqziKj44QdXZjBbhRJlFe/cKUAPA0oxJQw4SCaBlJvOR+ZmKD87AsonUZsgJhh/B3H4R97DHZ4hOA3zzsCVHKGICtYWwBKeC3tpM55M8FzL2L6BlAqEYlYRJjAy24hccJpqGw9dmiE8KX/w5YH0ao50moWmZ6HmHGEEl7jFhLHnopqyiJjBcKXD2AKPSgaUcpbtgjVBZhuaeWoFSZJnXcWmav+hMzll6DSSQ4f82ZkdByxBXTLRpo/+UkyV1yC375zOhnT18vkj37K2Be+TvnXz6G9jfNFmCLMjAEh/rajabj0WurfeynJc8+l+Nhj9L3napT4qIym+QtfpP6aP0dnmwBL8Yc/ZvDqG5GBAhIKYoZRJEm96Rwy11xK5pI9eFu20r/nSiae+C46kcGU+0gcdyLZj3+Q9J6L8dvanPhYwv2/o3DXNyjccQ9KpQDtyPQ8rBkkcdoZZG/+IHVv3423fTtTB8zDfJ7x+x9i9O/uRCYD1yBkGb0+z3apvHZIF5ulk7TkNxwr/e/7sBSfelpEjEzB9PfLodbTJUeDHD53lwT7908/kyAQCUMRO3PLTk7IwPUfkxxZyXvtM3mpNsnRJDk2Ss+ud8rYPfeJGeyfZWhl/JFvSqfKSL5ppxSf/tnMM2NEQlem8Ue/LR0gBzccL/3vu0GKTz0lFQUwRvouvkK69EbJ0Sj9114vZnhIKlAOKn4tPPiwdOmNkvfaJO+1SY4GGfzIx8WOjVa8Z8uBiJnJq/jjn0hX3Rbp8rZJXu2Q+fxul7zaIV1sku6tZwvzHqjNcmjHGTL+8CNixkfmF9JaMcODkk/tlO6TzhXT1ytVEYYi1ooNgmkuBq77qORokIPe0ZLXbZJTzdJ32TUS7H9pvm2pHJH7LenAk4knfzD/HWPElgMJjxyUsW/cI2Z0cBYz0TtBKCIife+8Sg6ADO29baY6L/9WSs/9j5iRSAxj3BXlPXTTXsmRlRxNMvL3X562M6PDEh4+KGZseCY/Y0RKJRERGf3inZKjXvLe0UsKUOmGKkAsKpHGHOpl8OobGL7lL7CFQtQNowmoFKAb07R88z70Ua0E+/ZRuOtfGP7Lv6Fw732Yw93geWAF5fuuKxrLhru+SPKsc7BmDOVpEAXjAWN3fIMjb97F6Je+iptstRuaANvXT+P7b6Du7X/E0M17GbzhJuzggEtfKVTCJ+w8SPn5fQxddws9F76N0jO/YnrSVm6IML29NN/0KZpv/yyFe+/nyHkX0nPmbnrOfhuHT3kTY1/66nSe+B5YS/bWG0Frmm+/jcZP3Uzpl88wcPV1HDljF0dOvpAjJ1/A4Ic+hh0bcfn4PhhLw0feT6LtRMQUnce22iGoi2bpABm94+tRd3MtI+g4IOOPPupaySf2Sldqk3SSmb7yLTul8MBDMy111mfxZz+XnNoged0medokxwbppF66aJYczVJ+KeoNgRsSJp/5hdjJMRm88VbpQEsnGek+8RyZeOJ7YkZHpPzii3LkjbulAy1dbJROtPS+4/I5eQdSfOqnEubz0rP73dJJnXSxcVZr3CKd+FK4+74KOxuUZeKJ77p67r1NunSLdNIgXWySPFuliy3SgZa+S97rupwx0z1u8CO3uF7gV+kFs3pAlUlYUCqB520Cz0MbIXjuRddBlJuQvPZ2MjuPYeCK91N45EE8WvH81ulOZAcm6b/mA6hUksxlfwrGuhZrLOnffwvpXbsoPfUUysuipSHy6zUSDhN2dJA46aTI1TOk3ngBE99+jNGv3YmfbEdZCF/O0feuq/C3t2P7h5BSgYTfjihBWx+TO+R6nedFnpqHd9Qmjpx7EWFPN56/OXIX3dpA+Um03cDoF/6JzLVXovyEu6890hf9AX3vvoKJx/8DT23C9xuQyJFQCny9g+J3niTY9wKJ005DwjJKNImzT1t6AmahlbAIhMZ5LKFFiqWKZ8oKA1d/iMIjD+EltjrWwxDCEAlDlJdEqyyDH7yFsPuQI9jaqMKQee8lWAI31Fjr8rIWxCCFwOVjBbTGDg8xfPNn0ToLoUHCAKXr0LoBc+gwlEKUrkfCwJXXCHa0iJTKM+koxfDNtxH2dOElWyEMovyiOoUGZZOYAwcxuZw7OBUEoDWjn/sHJh5/FC+1HbBIGM4suqyAKESVKP/6+an2C0rhbd0KLO2OLjMUITOfWmNHhil+8/to3eKIn5uJMWgvjRnpofDlf4xWzhItYiC16wJ0otkRoeaMkaFrXWINKMXkT54m6NqPUpmZxZy1YK1z9aZEnIaCsOyu6FcA5fsolV54LaI01hQxPT0VVdaNGZTX4OyqcRnNm/bIQAVXqrGONRRgbqYK3VDvuvECEBviqQYm/v0J7HjBTWwRGf7R7fjt2xDKMwIoV3gpFysTCgI39FWr/dzlv7iEJAxcS2WO2WJ+uVaAwY6VZycGCTexLonJqXdcfXQyhZpaQyyC1QfjlgotWAGVIuzuovzsr2fuWUElknjbtiCE878oO7e8U3GlFUChVvgV9Fm2c7Nabt7z8lue3bpGQ5XWQIngv6fGx5kWqzc24uIoq2TqNYJ1FSAaDQk7ctGdWWT7r2/ip7DO+wECKGxvNEHN4lxKy4yOvsaxvgJEkyLFWWRHK0M7OOwmqWWOla9VvDo7YlO5RD6ylIqYQ0eAxOud/3UWIHItVUs9ABJ5TmFnDnPwsNuwWe5GzWsU6+sFoUBZ/LYd7ka0+iz97BmsGXVrg9c5VrkQ04heevwWERCfxNmnuxueWwkXH/5PFP7rfviBFQvgJlCVqUPXp1mUQaXABnhNm0lecF4U9EpQfvZZJp/+OVpl54UFZNbPNcfckMeyIaxnS1l5D7AWlUrjHbMd0eWZGPpceD5WRqm79GK8llYkcKvekb2fQ0xQ3U6B8hKVt9IZF+9ZCZSeRXhEXnKJBgPOxpsjlOexusWiWpbdymqmmF7JNnz4GsRGGw7R0DJ9+T4SFtHZFho/czOEISqZoHDP/RR/8CTaa6ps/Woq1K0gHZ22iAj0j2lHSTLap16iQlqBB2TqUHX1lUXPJsFTKF0lTKHcDyUaMv7sm+hMvWssC9gprRGtkESluKo+CyoxpzFUKfLiNaoCz3Mh5cv/jMaPfgwTdCNmIgozACLYcBjxA1oe+Br+0TvB95l8+ucM3Xgrymuc4/m48IQNRlAkSJx5ohuuov0D/5STSJ5/LmGYdxHSBVuxuFC06Sdx+vGoRNJFVqPwR/LsM7Bm1PVEqZK/GUKl60kcd5yz0S4G5Z90PGLLSLkQ2UmlXXkcbJnkG06vsPPat6FbGrF2cNF40qomYSlPImGJDXd+npa7/5nEmSdAEhfdzHik3no+m374HeresweAySe/T/+eq6AEys4J0WqNaqrDP/1EWh74OokTT46GAg88jfITHPWte2m44hr0lmZIJqpL4HuoDSnSb7mI5q/87fQ9EglQiobr30f2yg+gWushnY5apTvtoJozJE4/mZaH7sLbui3a6nR2qQvOZ+NX7sA7vg2VrXPnn8B91iXxdm5mw+2fJ33RH1bY6WwTLQ9+jcSZZ0BjauHeW3XTeOry2yVHVvovu65imzDs7pae3e+R0q9+NbMnPdgvQa6jYqM6yHXK4Cf2Sk61SBebo23IKG2vTXI0S987Lpfy/hfEjAyIiBEzPiJ2YkzsxKj7HB8VGxRFbFnC7k4p/NvD0kWr5HV04sBrlxyNMnTrZ6R84CWxEyNiw0lnNzE2k8ZkQcSWJDh4QErPPyuHT3ijdJKW4U//lZR/94KY4X4RCSvtJkbFjo+KiJWw/7CUX94n/Zd+QDpJSN+7Lpfyvt9I2HNQRGxkV5mnSCBmdEDKL++Tnt1/LDmirdhZW5KL/6kC38OGQ9Rfdjktj9ztNl98Hzs8RPemsxBTpO6du0ld9FYSp56AbmrCjowQvLCf0n/9ktKPfoEZ7kHTXDF/ADMHALL16M0boVSOdtPmrw0k2klTqRQShJiDPVEYgyhcbVCtzejGLExOIki0h1CRCmIFlUqBp7D5XmyphLdpI7qxASmVEROidJX8jUElEqhkEtM3hB0ZQWez6C0trtxBUL3c1rr7qST2yABSmADcnDD1pwpWfjYUwFp0UwOmv8zE499j4vHHcMf6NIJl6riepn7mMNa8ODuARsbGCceGWZ7X4IJ7ilmekgigsX2D2L4+lh5VnVupSKLwMb0DmN7eZeQ/5Y76KBIrKPdUfomqZVudAOB2iZRCe81RPm5SUrMP51q7+HFEAKXdVuFyMXUQdm4yKuG8juXCRsSs1G4q/xWXW6r6D6sXYCpRs7LDqPPT4JXZzy7LapJZtR1rUu74+wE1RixAjbFKAeIo2lphaQG0QtW5L0FMD3mJJJLwX+/76WuC6gJEK1GlPKwt4B2zdeaZCLqhAa+1CZEJdyC1ig8cY3moGpIUmcSYfkzQR/r3LqD+2ivd8b2pI4hWaPzrW9BNjdigH2sGkXhYWhUqV8Keh5hR6vbsoeHGK9FHtZJ8wzkLGtvxMYLf/C9hrpOh6z4N42UX/VsLt/K1jAVXwtYCCcLfdjD+r09AECATRbeXOzekai0qlULVpZFyCcrRgismf0WoEgtSCJMIE7hZVrPwbDsVnlVoGhd5L0YFFo8FCUqlUTqzskSXCjnEqIrqoYipEEOMdUe8Eq4xYgFqjFiAGiMWoMaIBagxYgFqjFiAGiMWoMaIBagxYgFqDAXxv7F61REF49rpXem57xhrjViAGkPD0v/1Ocbao51eBXEPqDkqWn48Gb86mD3i6IUexFgfzOV43hAUi7B+qMZt1TkgFmHtsRCnC07CsQhrh8W4XNQLikV45ViKwyXd0FiE1WM53K2I3DxbYzd1GWjj8LJ5XXXrzqePjcWYhbbJA6vi8v8B5N356oT+PooAAAAASUVORK5CYII=");
+      background-size: cover;
+      background-position: center;
+      z-index: 10;
+      pointer-events: none;
+      opacity: .92;
+    }
+
+    .hud{
+      position:fixed;
+      right: calc(10px + env(safe-area-inset-right));
+      bottom: calc(10px + env(safe-area-inset-bottom));
+      z-index: 10;
+      display:flex;
+      gap:8px;
+    }
+    .btn{
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: var(--btn);
+      color: var(--text);
+      padding: 12px 14px;
+      font-size: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      backdrop-filter: blur(10px);
+    }
+    .btn:active{ background: var(--btn2); transform: translateY(1px); }
+  </style>
+</head>
+<body>
+  <canvas id="view"></canvas>
+  <div class="brand" aria-hidden="true"></div>
+
+  <div class="hud">
+    <button class="btn" id="pause">⏸︎</button>
+  </div>
+
+<script>
+(() => {
+  const view = document.getElementById('view');
+  const vctx = view.getContext('2d', { alpha:false });
+
+  // Internal buffer (logical pixels). ONE pixel is truly 1x1 here.
+  const buf = document.createElement('canvas');
+  const bctx = buf.getContext('2d', { alpha:false });
+
+  const clamp = (n,a,b) => Math.max(a, Math.min(b,n));
+  const lerp  = (a,b,t) => a + (b-a)*t;
+
+  // Choose a buffer size that preserves the 8-bit look but scales nicely.
+  // The browser will scale the view canvas to the screen (CSS), while we redraw crisp.
+  let BW=160, BH=280;
+
+  function resize() {
+    // physical canvas resolution matches CSS size for sharp scaling
+    const w = Math.max(320, window.innerWidth || 390);
+    const h = Math.max(480, window.innerHeight || 844);
+    const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+    view.width  = Math.floor(w * dpr);
+    view.height = Math.floor(h * dpr);
+
+    // Buffer can adapt lightly with aspect ratio while staying small
+    const aspect = w / h;
+    BW = clamp(Math.round(160 * aspect), 120, 200);
+    BH = clamp(Math.round(280), 220, 340);
+    buf.width = BW; buf.height = BH;
+
+    vctx.imageSmoothingEnabled = false;
+    bctx.imageSmoothingEnabled = false;
+  }
+
+  let running = true;
+  let t = 0;
+
+  const s = {
+    x: Math.floor(BW*0.5),
+    y: Math.floor(BH*0.46),
+    pressure: 0.0,   // insistence -> fades (0..1.25)
+    last: performance.now(),
+  };
+
+  function resetPixel() {
+    s.x = Math.floor(BW*0.5);
+    s.y = Math.floor(BH*0.46);
+    s.pressure = 0.0;
+    s.last = performance.now();
+  }
+
+  function drawBg() {
+    // Banded gradient background in buffer space (very light operations)
+    const a=[11,16,36], b=[7,10,20];
+    for (let y=0;y<BH;y++) {
+      const k = y / Math.max(1, (BH-1));
+      const r = Math.round(lerp(a[0], b[0], k));
+      const g = Math.round(lerp(a[1], b[1], k));
+      const bl= Math.round(lerp(a[2], b[2], k));
+      bctx.fillStyle = `rgb(${r},${g},${bl})`;
+      bctx.fillRect(0, y, BW, 1);
+    }
+    // sparse haze pixels
+    bctx.fillStyle = 'rgba(255,255,255,0.04)';
+    const n = Math.floor(BW*0.55);
+    for (let i=0;i<n;i++) {
+      if ((i % 13) === 0) {
+        const x = (i*37) % BW;
+        const y = (i*19) % Math.floor(BH*0.88);
+        bctx.fillRect(x, y, 1, 1);
+      }
+    }
+  }
+
+  function drawSinglePixel() {
+    // True single pixel in buffer space: 1x1
+    const p = clamp(s.pressure, 0, 1.25);
+    const calm = clamp(1 - p, 0, 1);
+
+    // Smooth breathing
+    const w = 0.78; // breathing speed
+    const breath01 = 0.5 + 0.5 * Math.sin(t * w); // 0..1
+
+    // More evident "blink": a sharper pulse near inhale peak, still continuous.
+    // Use a narrow Gaussian + a "spark" term (squared sine) to create a bright moment.
+    const peak = 1.0 - breath01;                  // 0 at peak
+    const gauss = Math.exp(-Math.pow(peak / 0.085, 2)); // narrower -> more pronounced
+    const spark = Math.pow(breath01, 10);          // very sharp near 1.0 (continuous)
+    const blink = (0.45 * gauss + 0.55 * spark) * 0.55; // 0..~0.55 (then scaled by calm)
+
+    // Base alpha fades with pressure.
+    const base = 0.68 - p * 0.70;
+
+    // Breathing amplitude when calm (slow rise/fall)
+    const breatheAmp = 0.34 * calm;
+
+    // Final alpha: breathing + blink (blink is the highlight)
+    const a = clamp(base + breatheAmp * breath01 + blink * calm, 0.02, 0.98);
+
+    bctx.fillStyle = `rgba(255,255,255,${a})`;
+    bctx.fillRect(Math.round(s.x), Math.round(s.y), 1, 1);
+  }
+
+  function blit() {
+    // Scale buffer to view canvas with crisp pixels
+    vctx.clearRect(0,0,view.width,view.height);
+    vctx.imageSmoothingEnabled = false;
+
+    // compute integer scale to fit
+    const scale = Math.max(1, Math.floor(Math.min(view.width / BW, view.height / BH)));
+    const dw = BW * scale;
+    const dh = BH * scale;
+    const ox = Math.floor((view.width - dw) / 2);
+    const oy = Math.floor((view.height - dh) / 2);
+
+    vctx.drawImage(buf, 0,0,BW,BH, ox,oy,dw,dh);
+  }
+
+  function toBufCoords(e) {
+    const r = view.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top)  / r.height;
+
+    // map into buffer coords, accounting for letterboxing
+    const scale = Math.max(1, Math.floor(Math.min(view.width / BW, view.height / BH)));
+    const dw = BW * scale;
+    const dh = BH * scale;
+    const ox = (view.width - dw) / 2;
+    const oy = (view.height - dh) / 2;
+
+    // view space in device pixels
+    const vx = px * view.width;
+    const vy = py * view.height;
+
+    const bx = (vx - ox) / scale;
+    const by = (vy - oy) / scale;
+    return { x: bx, y: by };
+  }
+
+  function addPressure(a) { s.pressure = clamp(s.pressure + a, 0, 1.25); }
+
+  view.addEventListener('pointerdown', (e) => {
+    view.setPointerCapture(e.pointerId);
+    const p = toBufCoords(e);
+    const dx = p.x - s.x;
+    const dy = p.y - s.y;
+    const dist = Math.hypot(dx,dy);
+    const hit = dist <= 8.0; // generous for touch
+
+    s.last = performance.now();
+    addPressure(0.10); // any tap adds a bit of "pressure"
+
+    if (hit) {
+      // gentle displacement, still readable
+      const step = 8;
+      const ang = Math.atan2(dy,dx) + (Math.random()-0.5)*0.22;
+      s.x = Math.round(s.x + Math.cos(ang)*step);
+      s.y = Math.round(s.y + Math.sin(ang)*step);
+      addPressure(0.10);
+    }
+
+    s.x = clamp(s.x, 6, BW-7);
+    s.y = clamp(s.y, 6, BH-7);
+  });
+
+  document.getElementById('pause').addEventListener('click', () => {
+    running = !running;
+    document.getElementById('pause').textContent = running ? '⏸︎' : '▶︎';
+  });
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = (now-last)/1000;
+    last = now;
+
+    if (running) {
+      t += dt;
+
+      // decay pressure; faster when idle
+      const idle = (now - s.last)/1000;
+      const decay = idle > 1.2 ? 0.70 : 0.30;
+      s.pressure = clamp(s.pressure - decay*dt, 0, 1.25);
+    }
+
+    drawBg();
+    drawSinglePixel();
+    blit();
+
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  resetPixel();
+  setTimeout(()=>{ resize(); resetPixel(); }, 80);
+  window.addEventListener('resize', ()=>{ resize(); resetPixel(); }, {passive:true});
+  window.addEventListener('orientationchange', ()=>setTimeout(()=>{ resize(); resetPixel(); }, 160), {passive:true});
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
